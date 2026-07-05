@@ -1,0 +1,223 @@
+package com.piuda.careon.consultation.service;
+
+import com.piuda.careon.ai.service.AudioConvertService;
+import com.piuda.careon.consultation.dto.ConsultationResponse;
+import com.piuda.careon.consultation.dto.CreateConsultationRequest;
+import com.piuda.careon.consultation.entity.Consultation;
+import com.piuda.careon.consultation.entity.ConsultationStatus;
+import com.piuda.careon.consultation.repository.ConsultationRepository;
+import com.piuda.careon.careRecipient.entity.CareRecipient;
+import com.piuda.careon.careRecipient.repository.CareRecipientRepository;
+import com.piuda.careon.consultation.dto.ConsultationDetailResponse;
+import com.piuda.careon.user.entity.User;
+import com.piuda.careon.user.repository.UserRepository;
+import com.piuda.careon.ai.service.SpeechToTextService;
+import com.piuda.careon.ai.dto.AiAnalysisResult;
+import com.piuda.careon.ai.service.AiAnalysisService;
+import com.piuda.careon.ai.service.RiskScoreService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class ConsultationService {
+
+    private final ConsultationRepository consultationRepository;
+    private final UserRepository userRepository;
+    private final SpeechToTextService speechToTextService;
+    private final AudioConvertService audioConvertService;
+    private final AiAnalysisService aiAnalysisService;
+    private final RiskScoreService riskScoreService;
+    private final CareRecipientRepository careRecipientRepository;
+
+    public ConsultationResponse createConsultation(CreateConsultationRequest request) {
+
+        User caregiver = userRepository.findById(request.caregiverId())
+                .orElseThrow(() -> new IllegalArgumentException("생활지원사를 찾을 수 없습니다."));
+
+        Consultation consultation = Consultation.builder()
+                .recipientName(request.recipientName())
+                .recipientAge(request.recipientAge())
+                .caregiver(caregiver)
+                .consultedAt(request.consultedAt())
+                .audioUrl(request.audioUrl())
+                .status(ConsultationStatus.NORMAL)
+                .aiTags(new ArrayList<>())
+                .sttText(null)
+                .aiSummary(null)
+                .aiSummaryPreview(null)
+                .workerFinalNote(null)
+                .socialWorkerOpinion(null)
+                .build();
+
+        consultationRepository.save(consultation);
+
+        return toResponse(consultation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConsultationResponse> getConsultations() {
+
+        return consultationRepository.findAllByOrderByConsultedAtDesc()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private ConsultationResponse toResponse(Consultation consultation) {
+
+        return new ConsultationResponse(
+                consultation.getId(),
+                consultation.getRecipientName(),
+                consultation.getRecipientAge(),
+                consultation.getCaregiver().getName(),
+                consultation.getConsultedAt(),
+                consultation.getStatus(),
+                consultation.getRiskScore(),
+                consultation.getAiTags(),
+                consultation.getAiSummaryPreview()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ConsultationDetailResponse getConsultation(UUID id) {
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("상담일지를 찾을 수 없습니다."));
+
+        return new ConsultationDetailResponse(
+                consultation.getId(),
+                consultation.getRecipientName(),
+                consultation.getRecipientAge(),
+                consultation.getCaregiver().getName(),
+                consultation.getConsultedAt(),
+                consultation.getAudioUrl(),
+                consultation.getStatus(),
+                consultation.getRiskScore(),
+                consultation.getAiTags(),
+                consultation.getSttText(),
+                consultation.getAiSummary(),
+                consultation.getAiSummaryPreview(),
+                consultation.getWorkerFinalNote(),
+                consultation.getSocialWorkerOpinion()
+        );
+    }
+
+    public ConsultationDetailResponse uploadAudio(UUID id, MultipartFile file) {
+
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("상담일지를 찾을 수 없습니다."));
+
+        try {
+            Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads", "audio");
+            Files.createDirectories(uploadPath);
+
+            String originalFilename = file.getOriginalFilename();
+            String fileName = id + "_" + originalFilename;
+
+            Path filePath = uploadPath.resolve(fileName);
+
+            file.transferTo(filePath.toFile());
+
+            String audioUrl = "/uploads/audio/" + fileName;
+            consultation.updateAudioUrl(audioUrl);
+
+            return getConsultation(id);
+
+        } catch (IOException e) {
+            throw new RuntimeException("음성 파일 저장에 실패했습니다.", e);
+        }
+    }
+
+    public ConsultationDetailResponse processConsultation(
+            UUID caregiverId,
+            UUID recipientId,
+            String consultedAt,
+            MultipartFile file
+    ) {
+        User caregiver = userRepository.findById(caregiverId)
+                .orElseThrow(() -> new IllegalArgumentException("생활지원사를 찾을 수 없습니다."));
+
+        CareRecipient recipient = careRecipientRepository.findById(recipientId)
+                .orElseThrow(() -> new IllegalArgumentException("대상자를 찾을 수 없습니다."));
+
+        Path filePath = null;
+        Path wavPath = null;
+
+        try {
+            Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads", "temp");
+            Files.createDirectories(uploadPath);
+
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            filePath = uploadPath.resolve(fileName);
+
+            file.transferTo(filePath.toFile());
+
+            wavPath = audioConvertService.convertM4aToWav(filePath);
+
+            String sttText = speechToTextService.transcribe(wavPath);
+
+            AiAnalysisResult aiResult = aiAnalysisService.analyze(sttText);
+
+            List<Consultation> recentConsultations =
+                    consultationRepository.findTop3ByRecipientNameOrderByConsultedAtDesc(recipient.getName());
+
+            int riskScore = riskScoreService.calculateRiskScore(
+                    aiResult.getTags(),
+                    recentConsultations
+            );
+
+            ConsultationStatus status =
+                    riskScoreService.determineStatus(riskScore);
+
+            Consultation consultation = Consultation.builder()
+                    .caregiver(caregiver)
+                    .recipient(recipient)
+                    .recipientName(recipient.getName())
+                    .recipientAge(recipient.getAge())
+                    .consultedAt(LocalDateTime.parse(consultedAt))
+                    .audioUrl(null)
+                    .sttText(sttText)
+                    .aiSummary(aiResult.getSummary())
+                    .aiSummaryPreview(aiResult.getSummaryPreview())
+                    .status(status)
+                    .riskScore(riskScore)
+                    .aiTags(aiResult.getTags())
+                    .workerFinalNote(null)
+                    .socialWorkerOpinion(aiResult.getSocialWorkerOpinion())
+                    .build();
+
+            consultationRepository.save(consultation);
+
+            return getConsultation(consultation.getId());
+
+        } catch (IOException e) {
+            throw new RuntimeException("상담 음성 처리에 실패했습니다.", e);
+
+        } finally {
+            try {
+
+                if (filePath != null)
+                    Files.deleteIfExists(filePath);
+
+                if (wavPath != null)
+                    Files.deleteIfExists(wavPath);
+
+            } catch (IOException ignored) {
+
+            }
+
+        }
+    }
+}
