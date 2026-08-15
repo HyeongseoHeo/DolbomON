@@ -1,5 +1,6 @@
 package com.piuda.careon.consultation.service;
 
+import com.piuda.careon.ai.domain.RiskDomain;
 import com.piuda.careon.ai.service.AudioConvertService;
 import com.piuda.careon.consultation.dto.ConsultationResponse;
 import com.piuda.careon.consultation.dto.CreateConsultationRequest;
@@ -86,6 +87,7 @@ public class ConsultationService {
                 consultation.getConsultedAt(),
                 consultation.getStatus(),
                 consultation.getRiskScore(),
+                consultation.getEmergency(),
                 consultation.getAiTags(),
                 consultation.getAiSummaryPreview()
         );
@@ -103,8 +105,26 @@ public class ConsultationService {
                 consultation.getCaregiver().getName(),
                 consultation.getConsultedAt(),
                 consultation.getAudioUrl(),
+
                 consultation.getStatus(),
+
+                // 최종 위험도
                 consultation.getRiskScore(),
+
+                // 세부 위험도
+                consultation.getCurrentRiskScore(),
+                consultation.getPersistenceScore(),
+                consultation.getNewChangeScore(),
+
+                // 영역별 점수
+                consultation.getNutritionScore(),
+                consultation.getMentalEmotionalScore(),
+                consultation.getCognitiveCommunicationScore(),
+                consultation.getPhysicalFunctionalSafetyScore(),
+                consultation.getSocialSupportScore(),
+
+                consultation.getEmergency(),
+
                 consultation.getAiTags(),
                 consultation.getSttText(),
                 consultation.getAiSummary(),
@@ -177,7 +197,6 @@ public class ConsultationService {
                     );
 
             int riskScore = riskResult.totalScore();
-
             ConsultationStatus status = riskResult.status();
 
             Consultation consultation = Consultation.builder()
@@ -186,12 +205,26 @@ public class ConsultationService {
                     .recipientName(recipient.getName())
                     .recipientAge(recipient.getAge())
                     .consultedAt(LocalDateTime.parse(consultedAt))
+
                     .audioUrl(null)
                     .sttText(sttText)
                     .aiSummary(aiResult.getSummary())
                     .aiSummaryPreview(aiResult.getSummaryPreview())
+
                     .status(status)
                     .riskScore(riskScore)
+
+                    .currentRiskScore(riskResult.currentScore())
+                    .persistenceScore(riskResult.persistenceScore())
+                    .newChangeScore(riskResult.newChangeScore())
+
+                    .nutritionScore(riskResult.domainScores().getOrDefault(RiskDomain.NUTRITION, 0))
+                    .mentalEmotionalScore(riskResult.domainScores().getOrDefault(RiskDomain.MENTAL_EMOTIONAL, 0))
+                    .cognitiveCommunicationScore(riskResult.domainScores().getOrDefault(RiskDomain.COGNITIVE_COMMUNICATION, 0))
+                    .physicalFunctionalSafetyScore(riskResult.domainScores().getOrDefault(RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY, 0))
+                    .socialSupportScore(riskResult.domainScores().getOrDefault(RiskDomain.SOCIAL_SUPPORT, 0))
+
+                    .emergency(riskResult.emergency())
                     .aiTags(aiResult.getTags())
                     .workerFinalNote(null)
                     .socialWorkerOpinion(aiResult.getSocialWorkerOpinion())

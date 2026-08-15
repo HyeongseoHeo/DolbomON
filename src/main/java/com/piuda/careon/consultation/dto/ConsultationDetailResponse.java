@@ -13,8 +13,23 @@ public record ConsultationDetailResponse(
         String caregiverName,
         LocalDateTime consultedAt,
         String audioUrl,
+
         ConsultationStatus status,
+
         Integer riskScore,
+
+        Integer currentRiskScore,
+        Integer persistenceScore,
+        Integer newChangeScore,
+
+        Integer nutritionScore,
+        Integer mentalEmotionalScore,
+        Integer cognitiveCommunicationScore,
+        Integer physicalFunctionalSafetyScore,
+        Integer socialSupportScore,
+
+        Boolean emergency,
+
         List<String> aiTags,
         String sttText,
         String aiSummary,

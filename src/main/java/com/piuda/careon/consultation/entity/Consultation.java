@@ -66,6 +66,42 @@ public class Consultation {
     @Builder.Default
     private Integer riskScore = 0;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer currentRiskScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer persistenceScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer newChangeScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer nutritionScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer mentalEmotionalScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer cognitiveCommunicationScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer physicalFunctionalSafetyScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer socialSupportScore = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean emergency = false;
+
     @Column(columnDefinition = "TEXT")
     private String workerFinalNote;
 
@@ -105,13 +141,35 @@ public class Consultation {
             String aiSummaryPreview,
             ConsultationStatus status,
             Integer riskScore,
+            Integer currentRiskScore,
+            Integer persistenceScore,
+            Integer newChangeScore,
+            Integer nutritionScore,
+            Integer mentalEmotionalScore,
+            Integer cognitiveCommunicationScore,
+            Integer physicalFunctionalSafetyScore,
+            Integer socialSupportScore,
+            Boolean emergency,
             List<String> aiTags
     ) {
         this.sttText = sttText;
         this.aiSummary = aiSummary;
         this.aiSummaryPreview = aiSummaryPreview;
         this.status = status;
+
         this.riskScore = riskScore;
+        this.currentRiskScore = currentRiskScore;
+        this.persistenceScore = persistenceScore;
+        this.newChangeScore = newChangeScore;
+
+        this.nutritionScore = nutritionScore;
+        this.mentalEmotionalScore = mentalEmotionalScore;
+        this.cognitiveCommunicationScore = cognitiveCommunicationScore;
+        this.physicalFunctionalSafetyScore = physicalFunctionalSafetyScore;
+        this.socialSupportScore = socialSupportScore;
+
+        this.emergency = emergency;
+
         this.aiTags = aiTags;
 
         // STT 완료 후 원본 음성은 저장 X

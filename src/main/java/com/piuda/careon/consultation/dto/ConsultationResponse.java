@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 public record ConsultationResponse(
-
         UUID id,
         String recipientName,
         Integer recipientAge,
@@ -15,6 +14,7 @@ public record ConsultationResponse(
         LocalDateTime consultedAt,
         ConsultationStatus status,
         Integer riskScore,
+        Boolean emergency,
         List<String> aiTags,
         String aiSummaryPreview
 
