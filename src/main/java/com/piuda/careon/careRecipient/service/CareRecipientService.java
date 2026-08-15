@@ -303,8 +303,8 @@ public class CareRecipientService {
                 recipient.getFamilyRelation(),
                 recipient.getFamilyContactPhone(),
                 recipient.getCaregiver().getId(),
-                recipient.getCaregiver().getName(),
-                recipient.getMemo()
+                recipient.getMemo(),
+                recipient.getCaregiver().getName()
         );
     }
 }
