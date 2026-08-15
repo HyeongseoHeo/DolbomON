@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface ConsultationRepository extends JpaRepository<Consultation, UUID> {
 
-    List<Consultation> findTop3ByRecipientNameOrderByConsultedAtDesc(String recipientName);
+    List<Consultation> findTop3ByRecipient_IdOrderByConsultedAtDesc(UUID recipientId);
     List<Consultation> findAllByOrderByConsultedAtDesc();
+
 }

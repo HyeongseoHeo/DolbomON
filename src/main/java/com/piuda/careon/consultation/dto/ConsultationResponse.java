@@ -9,21 +9,13 @@ import java.util.UUID;
 public record ConsultationResponse(
 
         UUID id,
-
         String recipientName,
-
         Integer recipientAge,
-
         String caregiverName,
-
         LocalDateTime consultedAt,
-
         ConsultationStatus status,
-
         Integer riskScore,
-
         List<String> aiTags,
-
         String aiSummaryPreview
 
 ) {

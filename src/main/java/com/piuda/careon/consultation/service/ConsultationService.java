@@ -170,16 +170,15 @@ public class ConsultationService {
 
             AiAnalysisResult aiResult = aiAnalysisService.analyze(sttText);
 
-            List<Consultation> recentConsultations =
-                    consultationRepository.findTop3ByRecipientNameOrderByConsultedAtDesc(recipient.getName());
+            RiskScoreService.RiskCalculationResult riskResult =
+                    riskScoreService.calculateRiskScore(
+                            recipient.getId(),
+                            aiResult.getTags()
+                    );
 
-            int riskScore = riskScoreService.calculateRiskScore(
-                    aiResult.getTags(),
-                    recentConsultations
-            );
+            int riskScore = riskResult.totalScore();
 
-            ConsultationStatus status =
-                    riskScoreService.determineStatus(riskScore);
+            ConsultationStatus status = riskResult.status();
 
             Consultation consultation = Consultation.builder()
                     .caregiver(caregiver)

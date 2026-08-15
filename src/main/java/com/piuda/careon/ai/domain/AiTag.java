@@ -1,54 +1,141 @@
 package com.piuda.careon.ai.domain;
 
-import lombok.Getter;
-
-@Getter
 public enum AiTag {
 
-    // ===== 식사 =====
-    MEAL_REDUCTION("식사감소"),
-    MEAL_REFUSAL("식사거부"),
+    // ===== 영양·섭취 =====
+    MEAL_REDUCTION(
+            "식사감소",
+            RiskDomain.NUTRITION
+    ),
 
-    // ===== 수면 =====
-    SLEEP_PROBLEM("수면문제"),
+    MEAL_REFUSAL(
+            "식사거부",
+            RiskDomain.NUTRITION
+    ),
 
-    // ===== 정신건강 =====
-    LONELINESS("외로움"),
-    DEPRESSION("우울감"),
-    ANXIETY("불안"),
+    WEIGHT_LOSS(
+            "체중감소",
+            RiskDomain.NUTRITION
+    ),
 
-    // ===== 인지 =====
-    CONFUSION("혼동"),
-    MEMORY_DECLINE("기억력저하"),
-    REPETITIVE_SPEECH("반복발화"),
+    // ===== 정신·정서 =====
+    SLEEP_PROBLEM(
+            "수면문제",
+            RiskDomain.MENTAL_EMOTIONAL
+    ),
 
-    // ===== 신체 =====
-    HEADACHE("두통"),
-    DIZZINESS("어지럼증"),
-    PAIN("통증"),
+    LONELINESS(
+            "외로움",
+            RiskDomain.MENTAL_EMOTIONAL
+    ),
 
-    // ===== 이동 =====
-    FALL_RISK("낙상위험"),
-    MOBILITY_DECLINE("거동불편"),
+    ANXIETY(
+            "불안",
+            RiskDomain.MENTAL_EMOTIONAL
+    ),
 
-    // ===== 복약 =====
-    MEDICATION_PROBLEM("복약문제"),
+    DEPRESSION(
+            "우울감",
+            RiskDomain.MENTAL_EMOTIONAL
+    ),
 
-    // ===== 생활 =====
-    HYGIENE_PROBLEM("위생문제"),
-    WEIGHT_LOSS("체중감소"),
-    SOCIAL_ISOLATION("사회적고립"),
+    // ===== 인지·의사소통 =====
+    REPETITIVE_SPEECH(
+            "반복발화",
+            RiskDomain.COGNITIVE_COMMUNICATION
+    ),
 
-    // ===== 보호 =====
-    FAMILY_SUPPORT("가족지원필요"),
+    MEMORY_DECLINE(
+            "기억력저하",
+            RiskDomain.COGNITIVE_COMMUNICATION
+    ),
+
+    CONFUSION(
+            "혼동",
+            RiskDomain.COGNITIVE_COMMUNICATION
+    ),
+
+    // ===== 신체·기능·안전 =====
+    HEADACHE(
+            "두통",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    PAIN(
+            "통증",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    DIZZINESS(
+            "어지럼증",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    HYGIENE_PROBLEM(
+            "위생문제",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    MOBILITY_DECLINE(
+            "거동불편",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    MEDICATION_PROBLEM(
+            "복약문제",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    FALL_RISK(
+            "낙상위험",
+            RiskDomain.PHYSICAL_FUNCTIONAL_SAFETY
+    ),
+
+    // ===== 사회·돌봄망 =====
+    FAMILY_SUPPORT(
+            "가족지원필요",
+            RiskDomain.SOCIAL_SUPPORT
+    ),
+
+    SOCIAL_ISOLATION(
+            "사회적고립",
+            RiskDomain.SOCIAL_SUPPORT
+    ),
 
     // ===== 응급 =====
-    EMERGENCY("응급상황");
+    EMERGENCY(
+            "응급상황",
+            RiskDomain.EMERGENCY
+    );
 
     private final String label;
+    private final RiskDomain domain;
 
-    AiTag(String label) {
+    AiTag(
+            String label,
+            RiskDomain domain
+    ) {
         this.label = label;
+        this.domain = domain;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public RiskDomain getDomain() {
+        return domain;
+    }
+
+    public static AiTag fromLabel(String label) {
+        for (AiTag tag : values()) {
+            if (tag.getLabel().equals(label)) {
+                return tag;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "지원하지 않는 AI 태그입니다: " + label
+        );
+    }
 }
