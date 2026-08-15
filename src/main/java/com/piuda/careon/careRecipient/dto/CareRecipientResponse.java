@@ -18,6 +18,7 @@ public record CareRecipientResponse(
         String familyRelation,
         String familyContactPhone,
         UUID caregiverId,
+        String memo,
         String caregiverName
 ) {
 }

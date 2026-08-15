@@ -16,6 +16,7 @@ public record CreateCareRecipientRequest(
         String familyContactName,
         String familyRelation,
         String familyContactPhone,
+        String memo,
         UUID caregiverId
 ) {
 }

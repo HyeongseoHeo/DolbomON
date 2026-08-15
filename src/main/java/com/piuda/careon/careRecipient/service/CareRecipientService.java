@@ -72,6 +72,7 @@ public class CareRecipientService {
                 .familyContactName(request.familyContactName())
                 .familyRelation(request.familyRelation())
                 .familyContactPhone(request.familyContactPhone())
+                .memo(request.memo())
                 .institution(admin.getInstitution())
                 .caregiver(caregiver)
                 .build();
@@ -278,6 +279,7 @@ public class CareRecipientService {
         recipient.setFamilyContactName(request.familyContactName());
         recipient.setFamilyRelation(request.familyRelation());
         recipient.setFamilyContactPhone(request.familyContactPhone());
+        recipient.setMemo(request.memo());
         recipient.setCaregiver(caregiver);
 
         return toResponse(recipient);
@@ -301,7 +303,8 @@ public class CareRecipientService {
                 recipient.getFamilyRelation(),
                 recipient.getFamilyContactPhone(),
                 recipient.getCaregiver().getId(),
-                recipient.getCaregiver().getName()
+                recipient.getCaregiver().getName(),
+                recipient.getMemo()
         );
     }
 }

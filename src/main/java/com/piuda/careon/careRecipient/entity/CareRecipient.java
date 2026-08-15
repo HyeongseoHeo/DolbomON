@@ -46,6 +46,9 @@ public class CareRecipient {
 
     private String familyContactPhone;
 
+    @Column(columnDefinition = "TEXT")
+    private String memo;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "institution_id")
     private Institution institution;
