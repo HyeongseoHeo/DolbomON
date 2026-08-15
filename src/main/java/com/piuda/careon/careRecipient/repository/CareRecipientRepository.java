@@ -1,6 +1,7 @@
 package com.piuda.careon.careRecipient.repository;
 
 import com.piuda.careon.careRecipient.entity.CareRecipient;
+import com.piuda.careon.institution.entity.Institution;
 import com.piuda.careon.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,6 +14,9 @@ public interface CareRecipientRepository
 
     List<CareRecipient> findByCaregiver(User caregiver);
 
-    Optional<CareRecipient> findByName(String name);
+    List<CareRecipient> findByInstitutionOrderByCreatedAtDesc(
+            Institution institution
+    );
 
+    Optional<CareRecipient> findByName(String name);
 }

@@ -5,8 +5,7 @@ import com.piuda.careon.careRecipient.entity.Gender;
 
 import java.util.UUID;
 
-public record CareRecipientResponse(
-        UUID id,
+public record UpdateCareRecipientRequest(
         String name,
         Integer age,
         Gender gender,
@@ -17,7 +16,6 @@ public record CareRecipientResponse(
         String familyContactName,
         String familyRelation,
         String familyContactPhone,
-        UUID caregiverId,
-        String caregiverName
+        UUID caregiverId
 ) {
 }

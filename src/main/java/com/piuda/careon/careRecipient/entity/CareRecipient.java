@@ -1,5 +1,6 @@
 package com.piuda.careon.careRecipient.entity;
 
+import com.piuda.careon.institution.entity.Institution;
 import com.piuda.careon.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,6 +45,10 @@ public class CareRecipient {
     private String familyRelation;
 
     private String familyContactPhone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "institution_id")
+    private Institution institution;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "caregiver_id")
