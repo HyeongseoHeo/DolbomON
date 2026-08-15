@@ -13,6 +13,5 @@ public class AiChangeItem {
 
     private String description;
 
-    private String type;
-    // increase, decrease, normal
+    private String type; // increase, decrease, normal
 }
