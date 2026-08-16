@@ -8,9 +8,14 @@ import java.util.UUID;
 
 public record ConsultationResponse(
         UUID id,
+
+        UUID recipientId,
         String recipientName,
         Integer recipientAge,
+
+        UUID caregiverId,
         String caregiverName,
+
         LocalDateTime consultedAt,
         ConsultationStatus status,
         Integer riskScore,

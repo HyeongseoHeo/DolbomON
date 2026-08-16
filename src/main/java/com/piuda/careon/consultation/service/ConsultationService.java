@@ -79,9 +79,22 @@ public class ConsultationService {
 
         return new ConsultationResponse(
                 consultation.getId(),
+
+                consultation.getRecipient() != null
+                        ? consultation.getRecipient().getId()
+                        : null,
+
                 consultation.getRecipientName(),
                 consultation.getRecipientAge(),
-                consultation.getCaregiver().getName(),
+
+                consultation.getCaregiver() != null
+                        ? consultation.getCaregiver().getId()
+                        : null,
+
+                consultation.getCaregiver() != null
+                        ? consultation.getCaregiver().getName()
+                        : null,
+
                 consultation.getConsultedAt(),
                 consultation.getStatus(),
                 consultation.getRiskScore(),
