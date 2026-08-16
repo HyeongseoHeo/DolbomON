@@ -2,14 +2,12 @@ package com.piuda.careon.consultation.service;
 
 import com.piuda.careon.ai.domain.RiskDomain;
 import com.piuda.careon.ai.service.AudioConvertService;
-import com.piuda.careon.consultation.dto.ConsultationResponse;
-import com.piuda.careon.consultation.dto.CreateConsultationRequest;
+import com.piuda.careon.consultation.dto.*;
 import com.piuda.careon.consultation.entity.Consultation;
 import com.piuda.careon.consultation.entity.ConsultationStatus;
 import com.piuda.careon.consultation.repository.ConsultationRepository;
 import com.piuda.careon.careRecipient.entity.CareRecipient;
 import com.piuda.careon.careRecipient.repository.CareRecipientRepository;
-import com.piuda.careon.consultation.dto.ConsultationDetailResponse;
 import com.piuda.careon.user.entity.User;
 import com.piuda.careon.user.repository.UserRepository;
 import com.piuda.careon.ai.service.SpeechToTextService;
@@ -100,9 +98,22 @@ public class ConsultationService {
 
         return new ConsultationDetailResponse(
                 consultation.getId(),
+
+                consultation.getRecipient() != null
+                        ? consultation.getRecipient().getId()
+                        : null,
+
                 consultation.getRecipientName(),
                 consultation.getRecipientAge(),
-                consultation.getCaregiver().getName(),
+
+                consultation.getCaregiver() != null
+                        ? consultation.getCaregiver().getId()
+                        : null,
+
+                consultation.getCaregiver() != null
+                        ? consultation.getCaregiver().getName()
+                        : null,
+
                 consultation.getConsultedAt(),
                 consultation.getAudioUrl(),
 
@@ -132,6 +143,44 @@ public class ConsultationService {
                 consultation.getWorkerFinalNote(),
                 consultation.getSocialWorkerOpinion()
         );
+    }
+
+    public ConsultationDetailResponse updateWorkerFinalNote(
+            UUID id,
+            UpdateWorkerFinalNoteRequest request
+    ) {
+
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "상담일지를 찾을 수 없습니다."
+                        )
+                );
+
+        consultation.updateWorkerFinalNote(
+                request.workerFinalNote()
+        );
+
+        return getConsultation(id);
+    }
+
+    public ConsultationDetailResponse updateSocialWorkerOpinion(
+            UUID id,
+            UpdateSocialWorkerOpinionRequest request
+    ) {
+
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "상담일지를 찾을 수 없습니다."
+                        )
+                );
+
+        consultation.updateSocialWorkerOpinion(
+                request.socialWorkerOpinion()
+        );
+
+        return getConsultation(id);
     }
 
     public ConsultationDetailResponse uploadAudio(UUID id, MultipartFile file) {

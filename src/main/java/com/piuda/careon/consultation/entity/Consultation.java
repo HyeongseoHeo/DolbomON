@@ -130,10 +130,12 @@ public class Consultation {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
     public void updateAudioUrl(String audioUrl) {
         this.audioUrl = audioUrl;
     }
+
+    public void updateWorkerFinalNote(String workerFinalNote) {this.workerFinalNote = workerFinalNote;}
+    public void updateSocialWorkerOpinion(String socialWorkerOpinion) {this.socialWorkerOpinion = socialWorkerOpinion;}
 
     public void updateAiResult(
             String sttText,

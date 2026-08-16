@@ -1,9 +1,7 @@
 package com.piuda.careon.consultation.controller;
 
-import com.piuda.careon.consultation.dto.ConsultationResponse;
-import com.piuda.careon.consultation.dto.CreateConsultationRequest;
+import com.piuda.careon.consultation.dto.*;
 import com.piuda.careon.consultation.service.ConsultationService;
-import com.piuda.careon.consultation.dto.ConsultationDetailResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -55,6 +53,34 @@ public class ConsultationController {
     ) {
         return ResponseEntity.ok(
                 consultationService.uploadAudio(id, file)
+        );
+    }
+
+    @PatchMapping("/{id}/worker-note")
+    public ResponseEntity<ConsultationDetailResponse> updateWorkerFinalNote(
+            @PathVariable UUID id,
+            @RequestBody UpdateWorkerFinalNoteRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                consultationService.updateWorkerFinalNote(
+                        id,
+                        request
+                )
+        );
+    }
+
+    @PatchMapping("/{id}/social-worker-opinion")
+    public ResponseEntity<ConsultationDetailResponse> updateSocialWorkerOpinion(
+            @PathVariable UUID id,
+            @RequestBody UpdateSocialWorkerOpinionRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                consultationService.updateSocialWorkerOpinion(
+                        id,
+                        request
+                )
         );
     }
 
