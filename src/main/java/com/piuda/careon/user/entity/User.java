@@ -45,6 +45,9 @@ public class User {
     @Column(nullable = false)
     private Boolean isActive;
 
+    @Column(nullable = false)
+    private Boolean mustChangePassword;
+
     private LocalDateTime lastLoginAt;
 
     @Column(nullable = false)
@@ -62,6 +65,10 @@ public class User {
             this.agreedTerms = false;
         }
 
+        if (this.mustChangePassword == null) {
+            this.mustChangePassword = false;
+        }
+
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -69,5 +76,15 @@ public class User {
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.passwordHash = encodedPassword;
+        this.mustChangePassword = false;
+    }
+
+    public void resetPassword(String encodedTemporaryPassword) {
+        this.passwordHash = encodedTemporaryPassword;
+        this.mustChangePassword = true;
     }
 }

@@ -1,6 +1,8 @@
 package com.piuda.careon.user.controller;
 
+import com.piuda.careon.user.dto.ChangePasswordRequest;
 import com.piuda.careon.user.dto.CreateUserRequest;
+import com.piuda.careon.user.dto.ResetPasswordResponse;
 import com.piuda.careon.user.dto.UserResponse;
 import com.piuda.careon.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +71,44 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.getUser(
                         userEmail,
+                        userId
+                )
+        );
+    }
+
+    /**
+     * 본인 비밀번호 변경
+     */
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(
+            Authentication authentication,
+            @RequestBody ChangePasswordRequest request
+    ) {
+
+        String userEmail = authentication.getName();
+
+        userService.changeMyPassword(
+                userEmail,
+                request
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 관리자 - 사용자 비밀번호 초기화
+     */
+    @PatchMapping("/{userId}/reset-password")
+    public ResponseEntity<ResetPasswordResponse> resetUserPassword(
+            Authentication authentication,
+            @PathVariable UUID userId
+    ) {
+
+        String adminEmail = authentication.getName();
+
+        return ResponseEntity.ok(
+                userService.resetUserPassword(
+                        adminEmail,
                         userId
                 )
         );

@@ -12,6 +12,7 @@ public record LoginResponse(
         UserRole role,
         UUID institutionId,
         String institutionCode,
-        String institutionName
+        String institutionName,
+        boolean mustChangePassword
 ) {
 }

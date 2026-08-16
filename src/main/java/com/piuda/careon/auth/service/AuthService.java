@@ -93,7 +93,8 @@ public class AuthService {
                 user.getRole(),
                 institution.getId(),
                 institution.getCode(),
-                institution.getName()
+                institution.getName(),
+                Boolean.TRUE.equals(user.getMustChangePassword())
         );
     }
 
@@ -112,7 +113,8 @@ public class AuthService {
                 user.getRole(),
                 institution.getId(),
                 institution.getCode(),
-                institution.getName()
+                institution.getName(),
+                Boolean.TRUE.equals(user.getMustChangePassword())
         );
     }
 }
