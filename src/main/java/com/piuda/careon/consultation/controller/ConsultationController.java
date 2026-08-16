@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,6 +83,20 @@ public class ConsultationController {
                         request
                 )
         );
+    }
+
+    @PostMapping("/{id}/feedback")
+    public ResponseEntity<Void> sendFeedback(
+            Authentication authentication,
+            @PathVariable UUID id
+    ) {
+
+        consultationService.sendFeedback(
+                authentication.getName(),
+                id
+        );
+
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/process")

@@ -9,11 +9,13 @@ import com.piuda.careon.consultation.repository.ConsultationRepository;
 import com.piuda.careon.careRecipient.entity.CareRecipient;
 import com.piuda.careon.careRecipient.repository.CareRecipientRepository;
 import com.piuda.careon.user.entity.User;
+import com.piuda.careon.user.entity.UserRole;
 import com.piuda.careon.user.repository.UserRepository;
 import com.piuda.careon.ai.service.SpeechToTextService;
 import com.piuda.careon.ai.dto.AiAnalysisResult;
 import com.piuda.careon.ai.service.AiAnalysisService;
 import com.piuda.careon.ai.service.RiskScoreService;
+import com.piuda.careon.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +45,7 @@ public class ConsultationService {
     private final AiAnalysisService aiAnalysisService;
     private final RiskScoreService riskScoreService;
     private final CareRecipientRepository careRecipientRepository;
+    private final NotificationService notificationService;
 
     public ConsultationResponse createConsultation(CreateConsultationRequest request) {
 
@@ -196,6 +202,73 @@ public class ConsultationService {
         return getConsultation(id);
     }
 
+    public void sendFeedback(
+            String userEmail,
+            UUID id
+    ) {
+
+        User sender = userRepository.findByEmail(userEmail)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "사용자 정보를 찾을 수 없습니다."
+                        )
+                );
+
+        // 사회복지사만 전송 가능
+        if (sender.getRole() != UserRole.SOCIAL_WORKER) {
+            throw new IllegalArgumentException(
+                    "상담 피드백을 전송할 권한이 없습니다."
+            );
+        }
+
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "상담일지를 찾을 수 없습니다."
+                        )
+                );
+
+        // 같은 기관 상담인지 확인
+        User caregiver = consultation.getCaregiver();
+
+        if (caregiver == null) {
+            throw new IllegalArgumentException(
+                    "담당 생활지원사를 찾을 수 없습니다."
+            );
+        }
+
+        if (sender.getInstitution() == null ||
+                caregiver.getInstitution() == null ||
+                !sender.getInstitution().getId()
+                        .equals(caregiver.getInstitution().getId())) {
+
+            throw new IllegalArgumentException(
+                    "다른 기관의 상담에는 피드백을 전송할 수 없습니다."
+            );
+        }
+
+        if (consultation.getSocialWorkerOpinion() == null ||
+                consultation.getSocialWorkerOpinion().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "전송할 사회복지사 소견이 없습니다."
+            );
+        }
+
+        UUID careRecipientId =
+                consultation.getRecipient() != null
+                        ? consultation.getRecipient().getId()
+                        : null;
+
+        notificationService
+                .createConsultationFeedbackNotification(
+                        caregiver,
+                        consultation.getId(),
+                        careRecipientId,
+                        consultation.getRecipientName()
+                );
+    }
+
     public ConsultationDetailResponse uploadAudio(UUID id, MultipartFile file) {
 
         Consultation consultation = consultationRepository.findById(id)
@@ -266,7 +339,12 @@ public class ConsultationService {
                     .recipient(recipient)
                     .recipientName(recipient.getName())
                     .recipientAge(recipient.getAge())
-                    .consultedAt(LocalDateTime.parse(consultedAt))
+                    .consultedAt(
+                            LocalDateTime.ofInstant(
+                                    Instant.parse(consultedAt),
+                                    ZoneId.of("Asia/Seoul")
+                            )
+                    )
 
                     .audioUrl(null)
                     .sttText(sttText)
