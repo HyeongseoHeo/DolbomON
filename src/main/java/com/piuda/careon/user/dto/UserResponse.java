@@ -1,5 +1,6 @@
 package com.piuda.careon.user.dto;
 
+import com.piuda.careon.user.entity.EmploymentStatus;
 import com.piuda.careon.user.entity.UserRole;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ public record UserResponse(
         String email,
         UserRole role,
         Boolean isActive,
+        EmploymentStatus employmentStatus,
         LocalDateTime lastLoginAt,
         LocalDateTime createdAt
 ) {

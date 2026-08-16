@@ -45,6 +45,11 @@ public class User {
     @Column(nullable = false)
     private Boolean isActive;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    @Builder.Default
+    private EmploymentStatus employmentStatus = EmploymentStatus.ACTIVE;
+
     @Column(nullable = false)
     private Boolean mustChangePassword;
 
@@ -61,6 +66,11 @@ public class User {
         if (this.isActive == null) {
             this.isActive = true;
         }
+
+        if (this.employmentStatus == null) {
+            this.employmentStatus = EmploymentStatus.ACTIVE;
+        }
+
         if (this.agreedTerms == null) {
             this.agreedTerms = false;
         }
@@ -86,5 +96,20 @@ public class User {
     public void resetPassword(String encodedTemporaryPassword) {
         this.passwordHash = encodedTemporaryPassword;
         this.mustChangePassword = true;
+    }
+
+    public void changeEmploymentStatus(EmploymentStatus status) {
+        this.employmentStatus = status;
+
+        if (status == EmploymentStatus.ACTIVE) {
+            this.isActive = true;
+        } else {
+            this.isActive = false;
+        }
+    }
+
+    public void resign() {
+        this.employmentStatus = EmploymentStatus.RESIGNED;
+        this.isActive = false;
     }
 }

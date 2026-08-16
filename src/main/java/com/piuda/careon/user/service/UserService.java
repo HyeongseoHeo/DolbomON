@@ -1,10 +1,8 @@
 package com.piuda.careon.user.service;
 
 import com.piuda.careon.institution.entity.Institution;
-import com.piuda.careon.user.dto.ChangePasswordRequest;
-import com.piuda.careon.user.dto.CreateUserRequest;
-import com.piuda.careon.user.dto.ResetPasswordResponse;
-import com.piuda.careon.user.dto.UserResponse;
+import com.piuda.careon.user.dto.*;
+import com.piuda.careon.user.entity.EmploymentStatus;
 import com.piuda.careon.user.entity.User;
 import com.piuda.careon.user.entity.UserRole;
 import com.piuda.careon.user.repository.UserRepository;
@@ -100,7 +98,10 @@ public class UserService {
                 currentUser.getInstitution();
 
         return userRepository
-                .findByInstitutionOrderByCreatedAtDesc(institution)
+                .findByInstitutionAndEmploymentStatusNotOrderByCreatedAtDesc(
+                        institution,
+                        EmploymentStatus.RESIGNED
+                )
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -138,6 +139,115 @@ public class UserService {
         }
 
         return toResponse(targetUser);
+    }
+
+    /**
+     * 사용자 상태 변경
+     */
+    @Transactional
+    public void updateEmploymentStatus(
+            String adminEmail,
+            UUID userId,
+            UpdateEmploymentStatusRequest request
+    ) {
+
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "관리자 정보를 찾을 수 없습니다."
+                        )
+                );
+
+        if (admin.getRole() != UserRole.ADMIN) {
+            throw new IllegalArgumentException(
+                    "사용자 상태를 변경할 권한이 없습니다."
+            );
+        }
+
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "사용자를 찾을 수 없습니다."
+                        )
+                );
+
+        // 같은 기관 사용자만 변경 가능
+        if (admin.getInstitution() == null
+                || targetUser.getInstitution() == null
+                || !admin.getInstitution().getId()
+                .equals(targetUser.getInstitution().getId())) {
+
+            throw new IllegalArgumentException(
+                    "다른 기관 사용자의 상태는 변경할 수 없습니다."
+            );
+        }
+
+        // 자기 자신 상태 변경 방지
+        if (admin.getId().equals(targetUser.getId())) {
+            throw new IllegalArgumentException(
+                    "관리자 본인의 재직 상태는 변경할 수 없습니다."
+            );
+        }
+
+        if (request.employmentStatus() == null) {
+            throw new IllegalArgumentException(
+                    "재직 상태를 입력해주세요."
+            );
+        }
+
+        targetUser.changeEmploymentStatus(
+                request.employmentStatus()
+        );
+    }
+
+    /**
+     * 이용자 삭제
+     */
+    @Transactional
+    public void resignUser(
+            String adminEmail,
+            UUID userId
+    ) {
+
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "관리자 정보를 찾을 수 없습니다."
+                        )
+                );
+
+        if (admin.getRole() != UserRole.ADMIN) {
+            throw new IllegalArgumentException(
+                    "사용자를 삭제할 권한이 없습니다."
+            );
+        }
+
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "사용자를 찾을 수 없습니다."
+                        )
+                );
+
+        // 같은 기관 사용자만 가능
+        if (admin.getInstitution() == null
+                || targetUser.getInstitution() == null
+                || !admin.getInstitution().getId()
+                .equals(targetUser.getInstitution().getId())) {
+
+            throw new IllegalArgumentException(
+                    "다른 기관 사용자는 삭제할 수 없습니다."
+            );
+        }
+
+        // 자기 자신 삭제 방지
+        if (admin.getId().equals(targetUser.getId())) {
+            throw new IllegalArgumentException(
+                    "관리자 본인 계정은 삭제할 수 없습니다."
+            );
+        }
+
+        targetUser.resign();
     }
 
     /**
@@ -354,6 +464,7 @@ public class UserService {
                 user.getEmail(),
                 user.getRole(),
                 user.getIsActive(),
+                user.getEmploymentStatus(),
                 user.getLastLoginAt(),
                 user.getCreatedAt()
         );

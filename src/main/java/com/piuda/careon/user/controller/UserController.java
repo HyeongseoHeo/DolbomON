@@ -1,9 +1,6 @@
 package com.piuda.careon.user.controller;
 
-import com.piuda.careon.user.dto.ChangePasswordRequest;
-import com.piuda.careon.user.dto.CreateUserRequest;
-import com.piuda.careon.user.dto.ResetPasswordResponse;
-import com.piuda.careon.user.dto.UserResponse;
+import com.piuda.careon.user.dto.*;
 import com.piuda.careon.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -74,6 +71,42 @@ public class UserController {
                         userId
                 )
         );
+    }
+
+    /**
+     * 사용자 상태
+     */
+    @PatchMapping("/{id}/employment-status")
+    public ResponseEntity<Void> updateEmploymentStatus(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @RequestBody UpdateEmploymentStatusRequest request
+    ) {
+
+        userService.updateEmploymentStatus(
+                authentication.getName(),
+                id,
+                request
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 이용자 삭제
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(
+            Authentication authentication,
+            @PathVariable UUID id
+    ) {
+
+        userService.resignUser(
+                authentication.getName(),
+                id
+        );
+
+        return ResponseEntity.noContent().build();
     }
 
     /**
