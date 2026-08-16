@@ -168,6 +168,40 @@ public class UserService {
             );
         }
 
+        if (!request.newPassword()
+                .equals(request.newPasswordConfirm())) {
+
+            throw new IllegalArgumentException(
+                    "새 비밀번호와 비밀번호 확인이 일치하지 않습니다."
+            );
+        }
+
+        String newPassword = request.newPassword();
+
+        if (newPassword.length() < 8) {
+            throw new IllegalArgumentException(
+                    "비밀번호는 8자 이상이어야 합니다."
+            );
+        }
+
+        if (!newPassword.matches(".*[A-Z].*")) {
+            throw new IllegalArgumentException(
+                    "비밀번호에 대문자가 포함되어야 합니다."
+            );
+        }
+
+        if (!newPassword.matches(".*[a-z].*")) {
+            throw new IllegalArgumentException(
+                    "비밀번호에 소문자가 포함되어야 합니다."
+            );
+        }
+
+        if (!newPassword.matches(".*[^A-Za-z0-9].*")) {
+            throw new IllegalArgumentException(
+                    "비밀번호에 특수문자가 포함되어야 합니다."
+            );
+        }
+
         // 현재 비밀번호와 새 비밀번호가 같은지 확인
         if (passwordEncoder.matches(
                 request.newPassword(),
