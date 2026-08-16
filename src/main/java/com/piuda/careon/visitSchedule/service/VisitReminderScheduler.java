@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Component
@@ -26,7 +27,10 @@ public class VisitReminderScheduler {
     @Transactional
     public void createVisitReminders() {
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now =
+                LocalDateTime.now(
+                        ZoneId.of("Asia/Seoul")
+                );
 
         // 지금부터 30분 이내에 예정된 방문 중
         // 아직 알림을 보내지 않은 일정 조회
