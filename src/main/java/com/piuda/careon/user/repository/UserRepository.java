@@ -2,6 +2,7 @@ package com.piuda.careon.user.repository;
 
 import com.piuda.careon.institution.entity.Institution;
 import com.piuda.careon.user.entity.User;
+import com.piuda.careon.user.entity.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -21,5 +22,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     List<User> findByInstitutionOrderByCreatedAtDesc(
             Institution institution
+    );
+
+    List<User> findByInstitutionAndRole(
+            Institution institution,
+            UserRole role
     );
 }

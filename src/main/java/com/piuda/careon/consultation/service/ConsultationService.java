@@ -372,6 +372,26 @@ public class ConsultationService {
 
             consultationRepository.save(consultation);
 
+            if (status == ConsultationStatus.SPECIAL_NOTE) {
+
+                notificationService.createRiskAlertNotification(
+                        caregiver,
+                        consultation.getId(),
+                        recipient.getId(),
+                        recipient.getName(),
+                        riskScore
+                );
+
+            } else {
+
+                notificationService.createConsultationRegisteredNotification(
+                        caregiver,
+                        consultation.getId(),
+                        recipient.getId(),
+                        recipient.getName()
+                );
+            }
+
             return getConsultation(consultation.getId());
 
         } catch (IOException e) {

@@ -5,6 +5,7 @@ import com.piuda.careon.notification.entity.Notification;
 import com.piuda.careon.notification.entity.NotificationType;
 import com.piuda.careon.notification.repository.NotificationRepository;
 import com.piuda.careon.user.entity.User;
+import com.piuda.careon.user.entity.UserRole;
 import com.piuda.careon.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -79,6 +80,97 @@ public class NotificationService {
                 .build();
 
         notificationRepository.save(notification);
+    }
+
+    /**
+     * 상담일지 등록 알림
+     * 같은 기관의 모든 사회복지사에게 전송
+     */
+    @Transactional
+    public void createConsultationRegisteredNotification(
+            User caregiver,
+            UUID consultationId,
+            UUID careRecipientId,
+            String recipientName
+    ) {
+
+        if (caregiver.getInstitution() == null) {
+            throw new IllegalArgumentException(
+                    "생활지원사의 기관 정보를 찾을 수 없습니다."
+            );
+        }
+
+        List<User> socialWorkers =
+                userRepository.findByInstitutionAndRole(
+                        caregiver.getInstitution(),
+                        UserRole.SOCIAL_WORKER
+                );
+
+        for (User socialWorker : socialWorkers) {
+
+            Notification notification = Notification.builder()
+                    .recipient(socialWorker)
+                    .type(NotificationType.CONSULTATION_REGISTERED)
+                    .title("상담일지 등록")
+                    .message(
+                            recipientName
+                                    + " 어르신의 상담일지가 등록되었습니다."
+                    )
+                    .consultationId(consultationId)
+                    .careRecipientId(careRecipientId)
+                    .isRead(false)
+                    .build();
+
+            notificationRepository.save(notification);
+        }
+    }
+
+
+    /**
+     * 위험군 알림
+     * 같은 기관의 모든 사회복지사에게 전송
+     */
+    @Transactional
+    public void createRiskAlertNotification(
+            User caregiver,
+            UUID consultationId,
+            UUID careRecipientId,
+            String recipientName,
+            int riskScore
+    ) {
+
+        if (caregiver.getInstitution() == null) {
+            throw new IllegalArgumentException(
+                    "생활지원사의 기관 정보를 찾을 수 없습니다."
+            );
+        }
+
+        List<User> socialWorkers =
+                userRepository.findByInstitutionAndRole(
+                        caregiver.getInstitution(),
+                        UserRole.SOCIAL_WORKER
+                );
+
+        for (User socialWorker : socialWorkers) {
+
+            Notification notification = Notification.builder()
+                    .recipient(socialWorker)
+                    .type(NotificationType.RISK_ALERT)
+                    .title("위험군 알림")
+                    .message(
+                            recipientName
+                                    + " 어르신이 위험군으로 분류되었습니다. "
+                                    + "위험도 "
+                                    + riskScore
+                                    + "점"
+                    )
+                    .consultationId(consultationId)
+                    .careRecipientId(careRecipientId)
+                    .isRead(false)
+                    .build();
+
+            notificationRepository.save(notification);
+        }
     }
 
     /**

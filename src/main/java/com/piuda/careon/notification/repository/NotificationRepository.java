@@ -17,7 +17,7 @@ public interface NotificationRepository
             User recipient
     );
 
-    // 특정 사용자의 읽지 않은 알림 - 최신순
+    // 특정 상담에 대한 기존 피드백 알림 조회
     Optional<Notification> findByRecipientAndTypeAndConsultationId(
             User recipient,
             NotificationType type,
