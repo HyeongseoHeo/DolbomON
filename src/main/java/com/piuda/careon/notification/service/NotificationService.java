@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -75,6 +76,33 @@ public class NotificationService {
                                 + " 어르신 상담에 대한 피드백이 도착했습니다."
                 )
                 .consultationId(consultationId)
+                .careRecipientId(careRecipientId)
+                .isRead(false)
+                .build();
+
+        notificationRepository.save(notification);
+    }
+
+    /**
+     * 방문 알람 생성
+     */
+    @Transactional
+    public void createVisitReminderNotification(
+            User caregiver,
+            UUID scheduleId,
+            UUID careRecipientId,
+            String recipientName,
+            LocalDateTime scheduledAt
+    ) {
+
+        Notification notification = Notification.builder()
+                .recipient(caregiver)
+                .type(NotificationType.VISIT_REMINDER)
+                .title("방문 일정 알림")
+                .message(
+                        recipientName
+                                + " 어르신 방문 예정 시간이 30분 남았습니다."
+                )
                 .careRecipientId(careRecipientId)
                 .isRead(false)
                 .build();
