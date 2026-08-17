@@ -22,6 +22,8 @@ public record ConsultationDetailResponse(
         ConsultationStatus status,
 
         Integer riskScore,
+        Integer previousRiskScore,
+        Integer riskScoreChange,
 
         Integer currentRiskScore,
         Integer persistenceScore,

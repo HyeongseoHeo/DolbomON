@@ -117,6 +117,26 @@ public class ConsultationService {
         Consultation consultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("상담일지를 찾을 수 없습니다."));
 
+        Integer previousRiskScore = null;
+        Integer riskScoreChange = null;
+
+        if (consultation.getRecipient() != null) {
+
+            Consultation previousConsultation =
+                    consultationRepository
+                            .findTopByRecipient_IdAndConsultedAtBeforeOrderByConsultedAtDesc(
+                                    consultation.getRecipient().getId(),
+                                    consultation.getConsultedAt()
+                            )
+                            .orElse(null);
+
+            if (previousConsultation != null) {
+                previousRiskScore = previousConsultation.getRiskScore();
+                riskScoreChange =
+                        consultation.getRiskScore() - previousRiskScore;
+            }
+        }
+
         return new ConsultationDetailResponse(
                 consultation.getId(),
 
@@ -142,6 +162,8 @@ public class ConsultationService {
 
                 // 최종 위험도
                 consultation.getRiskScore(),
+                previousRiskScore,
+                riskScoreChange,
 
                 // 세부 위험도
                 consultation.getCurrentRiskScore(),
@@ -229,6 +251,7 @@ public class ConsultationService {
                                 "상담일지를 찾을 수 없습니다."
                         )
                 );
+
 
         // 같은 기관 상담인지 확인
         User caregiver = consultation.getCaregiver();

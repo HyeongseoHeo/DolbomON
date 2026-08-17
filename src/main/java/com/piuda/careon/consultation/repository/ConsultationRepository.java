@@ -33,6 +33,6 @@ public interface ConsultationRepository extends JpaRepository<Consultation, UUID
     Optional<Consultation>
     findTopByRecipient_IdAndConsultedAtBeforeOrderByConsultedAtDesc(
             UUID recipientId,
-            LocalDateTime before
+            LocalDateTime consultedAt
     );
 }
