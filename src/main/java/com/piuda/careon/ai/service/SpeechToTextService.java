@@ -17,12 +17,8 @@ public class SpeechToTextService {
 
     public String transcribe(Path filePath, String languageCode) {
 
-        if (!"ko-KR".equals(languageCode) &&
-                !"ja-JP".equals(languageCode)) {
-            throw new IllegalArgumentException(
-                    "지원하지 않는 STT 언어입니다: " + languageCode
-            );
-        }
+        // 프론트에서 ko / ja 또는 locale 형태 모두 받을 수 있도록 통일
+        String normalizedLanguageCode = normalizeLanguageCode(languageCode);
 
         try (SpeechClient speechClient = SpeechClient.create()) {
 
@@ -32,7 +28,7 @@ public class SpeechToTextService {
             RecognitionConfig config = RecognitionConfig.newBuilder()
                     .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
                     .setSampleRateHertz(16000)
-                    .setLanguageCode(languageCode)
+                    .setLanguageCode(normalizedLanguageCode)
                     .setEnableAutomaticPunctuation(true)
                     .build();
 
@@ -48,9 +44,11 @@ public class SpeechToTextService {
             for (SpeechRecognitionResult result :
                     response.getResultsList()) {
 
-                resultText
-                        .append(result.getAlternatives(0).getTranscript())
-                        .append(" ");
+                if (result.getAlternativesCount() > 0) {
+                    resultText
+                            .append(result.getAlternatives(0).getTranscript())
+                            .append(" ");
+                }
             }
 
             return resultText.toString().trim();
@@ -58,5 +56,23 @@ public class SpeechToTextService {
         } catch (IOException e) {
             throw new RuntimeException("STT 변환에 실패했습니다.", e);
         }
+    }
+
+    private String normalizeLanguageCode(String languageCode) {
+
+        if (languageCode == null || languageCode.isBlank()) {
+            throw new IllegalArgumentException(
+                    "STT 언어 코드가 필요합니다."
+            );
+        }
+
+        return switch (languageCode) {
+            case "ko", "ko-KR" -> "ko-KR";
+            case "ja", "ja-JP" -> "ja-JP";
+
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 STT 언어입니다: " + languageCode
+            );
+        };
     }
 }
