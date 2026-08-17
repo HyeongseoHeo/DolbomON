@@ -12,8 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class AiAnalysisResult {
 
-    private ConsultationStatus status;
-
     private List<String> tags;
 
     private String summary;

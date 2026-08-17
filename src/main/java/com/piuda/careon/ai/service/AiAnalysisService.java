@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.piuda.careon.ai.dto.AiAnalysisResult;
 import com.piuda.careon.ai.dto.AiChangeItem;
-import com.piuda.careon.consultation.entity.ConsultationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -97,7 +96,6 @@ public class AiAnalysisService {
         }
 
         return new AiAnalysisResult(
-                ConsultationStatus.NEED_REVIEW,
                 List.of("AI분석실패", "검토필요"),
                 sttText,
                 preview,
@@ -155,7 +153,6 @@ public class AiAnalysisService {
             아래 형식으로만 응답한다.
 
             {
-              "status":"NORMAL|NEED_REVIEW|SPECIAL_NOTE",
               "tags":[
                 "식사감소",
                 "외로움"
@@ -178,11 +175,6 @@ public class AiAnalysisService {
 
         JsonNode node = objectMapper.readTree(jsonText);
 
-        ConsultationStatus status =
-                ConsultationStatus.valueOf(
-                        node.path("status").asText("NORMAL")
-                );
-
         List<String> tags = new ArrayList<>();
 
         for (JsonNode tagNode : node.path("tags")) {
@@ -203,7 +195,6 @@ public class AiAnalysisService {
         }
 
         return new AiAnalysisResult(
-                status,
                 tags,
                 node.path("summary").asText(),
                 node.path("summaryPreview").asText(),
