@@ -13,7 +13,7 @@ public record StatisticsSummaryResponse(
         long completedVisits,          // 방문 완료
         long consultationCount,        // 상담일지 작성
         long abnormalDetectionCount,   // 이상징후 탐지
-        long riskCount,                // 위험군 건수
+        long riskTransitionCount,      // 위험군 건수
         List<AbnormalTrendItem> abnormalTrend
 ) {
 }
