@@ -2,15 +2,18 @@ package com.piuda.careon.ai.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.piuda.careon.ai.dto.AiAnalysisResult;
 import com.piuda.careon.ai.dto.AiChangeItem;
 import com.piuda.careon.consultation.entity.ConsultationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.HttpOptions;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,9 +21,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AiAnalysisService {
 
+    @Value("${vertex.project-id}")
+    private String projectId;
 
-    @Value("${gemini.api-key}")
-    private String apiKey;
+    @Value("${vertex.credentials-path}")
+    private String vertexCredentialsPath;
+
+    @Value("${vertex.location:global}")
+    private String location;
+
+    @Value("${vertex.model:gemini-2.5-flash}")
+    private String model;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -28,45 +39,57 @@ public class AiAnalysisService {
         try {
             String prompt = buildPrompt(sttText);
 
-            WebClient webClient = WebClient.builder()
-                    .baseUrl("https://generativelanguage.googleapis.com")
-                    .build();
+            GoogleCredentials credentials =
+                    GoogleCredentials
+                            .fromStream(new FileInputStream(vertexCredentialsPath))
+                            .createScoped(
+                                    "https://www.googleapis.com/auth/cloud-platform"
+                            );
 
-            String response = webClient.post()
-                    .uri("/v1beta/models/gemini-2.5-flash-lite:generateContent?key=" + apiKey)
-                    .bodyValue("""
-                            {
-                              "contents": [
-                                {
-                                  "parts": [
-                                    {
-                                      "text": %s
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                            """.formatted(objectMapper.writeValueAsString(prompt)))
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            try (Client client = Client.builder()
+                    .vertexAI(true)
+                    .project(projectId)
+                    .location(location)
+                    .credentials(credentials)
+                    .httpOptions(
+                            HttpOptions.builder()
+                                    .apiVersion("v1")
+                                    .build()
+                    )
+                    .build()) {
 
-            String jsonText = extractText(response);
-            return parseResult(jsonText);
+                GenerateContentResponse response =
+                        client.models.generateContent(
+                                model,
+                                prompt,
+                                null
+                        );
 
-        } catch (WebClientResponseException e) {
-        System.out.println("Gemini Status = " + e.getStatusCode());
-        System.out.println("Gemini Error Body = " + e.getResponseBodyAsString());
+                String jsonText = response.text();
 
-        return fallbackResult(sttText);
+                if (jsonText == null || jsonText.isBlank()) {
+                    System.out.println("Vertex AI response is empty.");
+                    return fallbackResult(sttText);
+                }
+
+                jsonText = jsonText
+                        .replace("```json", "")
+                        .replace("```", "")
+                        .trim();
+
+                return parseResult(jsonText);
+            }
 
         } catch (Exception e) {
+            System.out.println("Vertex AI 분석 실패");
             e.printStackTrace();
+
             return fallbackResult(sttText);
         }
     }
 
     private AiAnalysisResult fallbackResult(String sttText) {
+
         String preview = sttText;
 
         if (preview != null && preview.length() > 50) {
@@ -151,40 +174,32 @@ public class AiAnalysisService {
             """.formatted(sttText);
     }
 
-    private String extractText(String response) throws Exception {
-        JsonNode root = objectMapper.readTree(response);
-
-        return root.path("candidates")
-                .get(0)
-                .path("content")
-                .path("parts")
-                .get(0)
-                .path("text")
-                .asText()
-                .replace("```json", "")
-                .replace("```", "")
-                .trim();
-    }
-
     private AiAnalysisResult parseResult(String jsonText) throws Exception {
+
         JsonNode node = objectMapper.readTree(jsonText);
 
-        ConsultationStatus status = ConsultationStatus.valueOf(
-                node.path("status").asText("NORMAL")
-        );
+        ConsultationStatus status =
+                ConsultationStatus.valueOf(
+                        node.path("status").asText("NORMAL")
+                );
 
         List<String> tags = new ArrayList<>();
+
         for (JsonNode tagNode : node.path("tags")) {
             tags.add(tagNode.asText());
         }
 
         List<AiChangeItem> changes = new ArrayList<>();
+
         for (JsonNode changeNode : node.path("changes")) {
-            changes.add(new AiChangeItem(
-                    changeNode.path("title").asText(),
-                    changeNode.path("description").asText(),
-                    changeNode.path("type").asText()
-            ));
+
+            changes.add(
+                    new AiChangeItem(
+                            changeNode.path("title").asText(),
+                            changeNode.path("description").asText(),
+                            changeNode.path("type").asText()
+                    )
+            );
         }
 
         return new AiAnalysisResult(

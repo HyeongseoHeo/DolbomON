@@ -66,39 +66,30 @@ public class Consultation {
     @Builder.Default
     private Integer riskScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer currentRiskScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer persistenceScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer newChangeScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer nutritionScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer mentalEmotionalScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer cognitiveCommunicationScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer physicalFunctionalSafetyScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Integer socialSupportScore = 0;
 
-    @Column(nullable = false)
     @Builder.Default
     private Boolean emergency = false;
 

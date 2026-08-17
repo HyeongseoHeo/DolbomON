@@ -46,11 +46,10 @@ public class User {
     private Boolean isActive;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(length = 30)
     @Builder.Default
     private EmploymentStatus employmentStatus = EmploymentStatus.ACTIVE;
 
-    @Column(nullable = false)
     private Boolean mustChangePassword;
 
     private LocalDateTime lastLoginAt;
