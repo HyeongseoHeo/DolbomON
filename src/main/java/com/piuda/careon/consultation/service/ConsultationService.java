@@ -16,6 +16,7 @@ import com.piuda.careon.ai.dto.AiAnalysisResult;
 import com.piuda.careon.ai.service.AiAnalysisService;
 import com.piuda.careon.ai.service.RiskScoreService;
 import com.piuda.careon.notification.service.NotificationService;
+import com.piuda.careon.visitSchedule.service.VisitScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +47,7 @@ public class ConsultationService {
     private final RiskScoreService riskScoreService;
     private final CareRecipientRepository careRecipientRepository;
     private final NotificationService notificationService;
+    private final VisitScheduleService visitScheduleService;
 
     public ConsultationResponse createConsultation(CreateConsultationRequest request) {
 
@@ -371,6 +373,12 @@ public class ConsultationService {
                     .build();
 
             consultationRepository.save(consultation);
+
+            visitScheduleService.completeScheduleForConsultation(
+                    caregiver,
+                    recipient,
+                    consultation.getConsultedAt()
+            );
 
             if (status == ConsultationStatus.SPECIAL_NOTE) {
 

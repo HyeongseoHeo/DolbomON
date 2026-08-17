@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -92,6 +93,36 @@ public class VisitScheduleService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    /**
+     * 방문 완료 처리
+     */
+    @Transactional
+    public void completeScheduleForConsultation(
+            User caregiver,
+            CareRecipient recipient,
+            LocalDateTime consultedAt
+    ) {
+
+        LocalDateTime startOfDay =
+                consultedAt.toLocalDate().atStartOfDay();
+
+        LocalDateTime endOfDay =
+                consultedAt.toLocalDate()
+                        .plusDays(1)
+                        .atStartOfDay()
+                        .minusNanos(1);
+
+        visitScheduleRepository
+                .findFirstByCaregiverAndRecipientAndStatusAndScheduledAtBetweenOrderByScheduledAtAsc(
+                        caregiver,
+                        recipient,
+                        VisitScheduleStatus.SCHEDULED,
+                        startOfDay,
+                        endOfDay
+                )
+                .ifPresent(VisitSchedule::complete);
     }
 
     /**
