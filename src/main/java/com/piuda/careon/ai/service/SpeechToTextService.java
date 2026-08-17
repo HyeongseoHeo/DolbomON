@@ -15,7 +15,15 @@ import java.nio.file.Path;
 @Service
 public class SpeechToTextService {
 
-    public String transcribe(Path filePath) {
+    public String transcribe(Path filePath, String languageCode) {
+
+        if (!"ko-KR".equals(languageCode) &&
+                !"ja-JP".equals(languageCode)) {
+            throw new IllegalArgumentException(
+                    "지원하지 않는 STT 언어입니다: " + languageCode
+            );
+        }
+
         try (SpeechClient speechClient = SpeechClient.create()) {
 
             byte[] data = Files.readAllBytes(filePath);
@@ -24,7 +32,7 @@ public class SpeechToTextService {
             RecognitionConfig config = RecognitionConfig.newBuilder()
                     .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
                     .setSampleRateHertz(16000)
-                    .setLanguageCode("ko-KR")
+                    .setLanguageCode(languageCode)
                     .setEnableAutomaticPunctuation(true)
                     .build();
 
@@ -32,12 +40,17 @@ public class SpeechToTextService {
                     .setContent(audioBytes)
                     .build();
 
-            RecognizeResponse response = speechClient.recognize(config, audio);
+            RecognizeResponse response =
+                    speechClient.recognize(config, audio);
 
             StringBuilder resultText = new StringBuilder();
 
-            for (SpeechRecognitionResult result : response.getResultsList()) {
-                resultText.append(result.getAlternatives(0).getTranscript()).append(" ");
+            for (SpeechRecognitionResult result :
+                    response.getResultsList()) {
+
+                resultText
+                        .append(result.getAlternatives(0).getTranscript())
+                        .append(" ");
             }
 
             return resultText.toString().trim();

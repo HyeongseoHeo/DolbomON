@@ -301,6 +301,7 @@ public class ConsultationService {
             UUID caregiverId,
             UUID recipientId,
             String consultedAt,
+            String languageCode,
             MultipartFile file
     ) {
         User caregiver = userRepository.findById(caregiverId)
@@ -323,7 +324,11 @@ public class ConsultationService {
 
             wavPath = audioConvertService.convertM4aToWav(filePath);
 
-            String sttText = speechToTextService.transcribe(wavPath);
+            String sttText =
+                    speechToTextService.transcribe(
+                            wavPath,
+                            languageCode
+                    );
 
             AiAnalysisResult aiResult = aiAnalysisService.analyze(sttText);
 

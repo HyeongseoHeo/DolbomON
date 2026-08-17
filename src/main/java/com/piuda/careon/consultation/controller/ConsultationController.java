@@ -99,6 +99,7 @@ public class ConsultationController {
         return ResponseEntity.noContent().build();
     }
 
+
     @PostMapping("/process")
     public ResponseEntity<ConsultationDetailResponse> processConsultation(
 
@@ -111,6 +112,9 @@ public class ConsultationController {
             @RequestParam("consultedAt")
             String consultedAt,
 
+            @RequestParam("languageCode")
+            String languageCode,
+
             @RequestParam("file")
             MultipartFile file
 
@@ -121,6 +125,7 @@ public class ConsultationController {
                         caregiverId,
                         recipientId,
                         consultedAt,
+                        languageCode,
                         file
                 )
         );

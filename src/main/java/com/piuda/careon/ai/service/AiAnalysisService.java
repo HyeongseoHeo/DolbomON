@@ -106,8 +106,11 @@ public class AiAnalysisService {
 
     private String buildPrompt(String sttText) {
         return """
-            너는 재가노인 돌봄 상담을 분석하는 AI다.
+            너는 한국과 일본의 재가노인 돌봄 상담을 분석하는 AI다.
 
+            입력 상담은 한국어 또는 일본어일 수 있다.
+            입력된 상담 언어를 자동으로 판별한다.
+            
             절대로 의료 진단을 하지 마라.
             상담 내용을 요약하고 아래의 '표준 태그' 중에서만 선택하여 반환한다.
 
@@ -143,8 +146,10 @@ public class AiAnalysisService {
             2. 새로운 태그를 만들지 않는다.
             3. 태그는 최대 5개만 선택한다.
             4. 근거가 없는 태그는 넣지 않는다.
-            5. 응답은 JSON만 반환한다.
-            6. ```json 또는 설명 문장은 절대 출력하지 않는다.
+            5. summary, summaryPreview, changes의 title/description, socialWorkerOpinion은 반드시 상담 원문과 같은 언어로 작성한다.
+            6. 일본어 상담이어도 tags는 반드시 위의 한국어 표준 태그를 사용한다.
+            7. 응답은 JSON만 반환한다.
+            8. ```json 또는 설명 문장은 절대 출력하지 않는다.
 
             상담 원문
 
